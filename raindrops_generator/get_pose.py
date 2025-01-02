@@ -29,6 +29,7 @@ with open(output_file, mode='w', newline='') as file:
         can_data = nusc_can.get_messages(scene['name'], 'steeranglefeedback')
 
         # カメラ画像に対応するego_poseを取得
+        first_sample = True
         while sample_token:
             sample = nusc.get('sample', sample_token)
             cam_data = nusc.get('sample_data', sample['data'][sensor_channel])
@@ -39,10 +40,13 @@ with open(output_file, mode='w', newline='') as file:
 
             # ステアリング角度をタイムスタンプに基づいて検索
             steering_angle = None
+            search_range = 5e4 if first_sample else 1e4  # 最初のサンプルの場合は5秒以内、それ以外は1秒以内
             for entry in can_data:
-                if abs(entry['utime'] - ego_timestamp) < 1e4:  # 10ミリ秒以内のデータをマッチング
+                if abs(entry['utime'] - ego_timestamp) < search_range:  # 10ミリ秒以内のデータをマッチング
                     steering_angle = entry['value']
                     break
+            
+            first_sample = False
 
             # CSVに書き込み
             writer.writerow([
@@ -62,5 +66,6 @@ with open(output_file, mode='w', newline='') as file:
 
             # 次のデータへ移動
             sample_token = sample['next']
+        nusc_can.plot_message_data(scene['name'], 'steeranglefeedback', 'value')
 
 print(f"Processed {len(processed_images)} images and saved to {output_file}.")
