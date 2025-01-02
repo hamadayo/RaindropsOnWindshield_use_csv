@@ -15,6 +15,11 @@ If you use this dataset, please, cite the appropriate paper:
   </code>
 </pre>
 
+## How to use
+
+python3 get_csvdata.py can write csv data about list_of_raidrops.
+python3 write_csv_data.py can make same raindrops using csvdata written by get_csvdata.
+
 ## Dataset description
 
 The images for the dataset were captured by a camera attached to the vehicle during its movement. The vehicle's movement took place in urban areas and highways, making the dataset ideal for training and assessing vision algorithms for autonomous vehicle camera lens pollution detection. 
