@@ -43,7 +43,7 @@ def download_files(txt_file_path, save_directory):
 
 if __name__ == "__main__":
     # Path to the text file containing the URLs
-    txt_file_path = "nuscenes_trainval.txt"  # Replace with the path to your text file
+    txt_file_path = "nuscenes_test.txt"  # Replace with the path to your text file
 
     # Directory where files will be saved
     save_directory = "/media/yoshi-22/iASL-data001/data/nuscenes"  # Replace with your desired directory
