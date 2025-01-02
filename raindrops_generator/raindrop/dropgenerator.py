@@ -19,11 +19,83 @@ Author: Chia-Tse, Chang
 Edited by Vera, Soboleva
 """
 
+def generate_random_positions(drop_num, imgw, imgh, region="top-right"):
+    """
+    Generate random positions within a specified region of the image.
+
+    :param drop_num: Number of positions to generate.
+    :param imgw: Image width.
+    :param imgh: Image height.
+    :param region: Region of the image to limit the positions. 
+                   Options: "top-right", "top-center", "top-left".
+    :return: List of (x, y) positions.
+    """
+    if region == "top-right":
+        x_min, x_max = imgw // 2, imgw
+        y_min, y_max = 0, imgh // 3
+    elif region == "top-center":
+        x_min, x_max = imgw // 3, 2 * imgw // 3
+        y_min, y_max = 0, imgh // 3
+    elif region == "top-left":
+        x_min, x_max = 0, imgw // 2
+        y_min, y_max = 0, imgh // 3
+    elif region == "bottom-right":
+        x_min, x_max = imgw // 2, imgw
+        y_min, y_max = 2 * imgh // 3, imgh
+    elif region == "bottom-center":
+        x_min, x_max = imgw // 3, 2 * imgw // 3
+        y_min, y_max = 2 * imgh // 3, imgh
+    elif region == "bottom-left":
+        x_min, x_max = 0, imgw // 2
+        y_min, y_max = 2 * imgh // 3, imgh
+    elif region == "middle-right":
+        x_min, x_max = imgw // 2, imgw
+        y_min, y_max = imgh // 3, 2 * imgh // 3
+    elif region == "middle-center":
+        x_min, x_max = imgw // 3, 2 * imgw // 3
+        y_min, y_max = imgh // 3, 2 * imgh // 3
+    elif region == "middle-left":
+        x_min, x_max = 0, imgw // 3
+        y_min, y_max = imgh // 3, 2 * imgh // 3
+    elif region == "forth-top-right":
+        x_min, x_max = imgw // 2, imgw
+        y_min, y_max = 0, imgh // 2
+    elif region == "forth-top-left":
+        x_min, x_max = 0, imgw // 2
+        y_min, y_max = 0, imgh // 2
+    elif region == "forth-bottom-right":
+        x_min, x_max = imgw // 2, imgw
+        y_min, y_max = imgh // 2, imgh
+    elif region == "forth-bottom-left":
+        x_min, x_max = 0, imgw // 2
+        y_min, y_max = imgh // 2, imgh
+
+    else:
+        raise ValueError("Invalid region specified. Use 'top-right', 'top-center', or 'top-left'.")
+    
+    # Generate random positions within the specified region
+    ran_pos = [(random.randint(x_min, x_max - 1), random.randint(y_min, y_max - 1)) for _ in range(drop_num)]
+    return ran_pos
+
+
 
 def CheckCollision(DropList):
 	"""
 	This function handle the collision of the drops
 	:param DropList: list of raindrop class objects 
+	"""
+	"""
+	具体例
+	final_x = 20 * 10 = 200
+	final_y = 30 * 10 = 300
+	tmp_devide = 10
+	final_x += 25 * 15 = 200 + 375 = 575
+	final_y += 35 * 15 = 300 + 525 = 825
+	tmp_devide += 15 = 10 + 15 = 25
+	final_x = int(round(575 / 25)) = 23
+	final_y = int(round(825 / 25)) = 33
+	final_R = int(round(math.sqrt(10^2 + 15^2))) = int(round(math.sqrt(100 + 225))) = 18
+	衝突した雨滴を1つにまとめて新しい雨滴を生成する
 	"""
 	listFinalDrops = []
 	Checked_list = []
@@ -65,10 +137,7 @@ def CheckCollision(DropList):
 				drop_key = drop_key+1
 				listFinalDrops.append(drop)
 	
-
 	return listFinalDrops
-
-
 
 def generate_label(h, w, cfg):
 	"""
@@ -78,38 +147,54 @@ def generate_label(h, w, cfg):
 	:param cfg: config with global constants
 	:param shape: int from 0 to 2 defining raindrop shape type
 	"""
+	# configを読み込む
 	maxDrop = cfg["maxDrops"]
 	minDrop = cfg["minDrops"]   
 	maxR = cfg["maxR"]
-	minR = cfg["minR"]   
+	minR = cfg["minR"]
+	region = cfg["region"]
+	# 雨滴の個数をランダムに決定   
 	drop_num = randint(minDrop, maxDrop)   
 	imgh = h
 	imgw = w   
     # random drops position
-	ran_pos = [(int(random.random() * imgw), int(random.random() * imgh)) for _ in range(drop_num)]
+	# 画像内にランダムに雨滴の位置を決定
+	ran_pos = generate_random_positions(drop_num, imgw, imgh, region)
 	listRainDrops = []
 	listFinalDrops = []   
 	for key, pos in enumerate(ran_pos):
+		# keyを1から始める
 		key = key+1
+		# 雨滴の半径をランダムに決定
 		radius = random.randint(minR, maxR)
+		# 雨滴の形状をランダムに決定 0が円形、1が楕円形、2がベジェ曲線
 		shape = random.randint(0,2)
+		# 雨滴のオブジェクトを生成
 		drop = Raindrop(key, pos, radius, shape)
+		# 雨滴のリストに追加
 		listRainDrops.append(drop)    
     # to check if collision or not
+	# 画像サイズと同じサイズのラベルマップを生成
 	label_map = np.zeros([h, w])
+	# 雨滴の総数を衝突回数として初期化
 	collisionNum = len(listRainDrops)
+	# 雨滴のリストをコピー
 	listFinalDrops = list(listRainDrops)
 	loop = 0
 	while collisionNum > 0:
 		loop = loop + 1
 		listFinalDrops = list(listFinalDrops)
 		collisionNum = len(listFinalDrops)
+		# label_mapの初期化　雨滴がない部分は0, 雨滴がある部分は雨滴のキーが格納される
 		label_map = np.zeros_like(label_map)
         # Check Collision
 		for drop in listFinalDrops:
             # check the bounding 
 			(ix, iy) = drop.getCenters()
 			radius = drop.getRadius()
+			# ix = 90, iy = 20, raduis = 10のとき、ROI_WL = 20, ROI_WR = 20, ROI_HU = 30, ROI_HD = 20
+			# このとき、iy - 3*radius = 20 - 30 = -10なので、ROI_HU = 20,　それ以外は同様
+
 			ROI_WL = 2*radius
 			ROI_WR = 2*radius
 			ROI_HU = 3*radius
@@ -123,10 +208,14 @@ def generate_label(h, w, cfg):
 			if  (ix+2*radius) > imgw:
 				ROI_WR = imgw - ix
             # apply raindrop label map to Image's label map
+			# drop_labelは雨滴のラベルマップ（画像全体ではない）
 			drop_label = drop.getLabelMap()
             # check if center has already has drops
+			# 中心座標に既に雨滴があるかどうかを確認
 			if (label_map[iy, ix] > 0):
+				# 既に雨滴がある場合、衝突したとして、衝突した雨滴のキーを取得
 				col_ids = np.unique(label_map[iy - ROI_HU:iy + ROI_HD, ix - ROI_WL: ix+ROI_WR])
+				# 0以外の値を取得
 				col_ids = col_ids[col_ids!=0]
 				drop.setCollision(True, col_ids)
 				label_map[iy - ROI_HU:iy + ROI_HD, ix - ROI_WL: ix+ROI_WR] = drop_label[3*radius - ROI_HU:3*radius + ROI_HD, 2*radius - ROI_WL: 2*radius+ROI_WR] * drop.getKey()
@@ -140,8 +229,6 @@ def generate_label(h, w, cfg):
 	return listFinalDrops, label_map
     
     
-
-
 def generateDrops(imagePath, cfg, listFinalDrops):
 	"""
 	Generate raindrops on the image
@@ -163,7 +250,7 @@ def generateDrops(imagePath, cfg, listFinalDrops):
 	C = cfg["C"]
 	D = cfg["D"]
 
-	alpha_map = np.zeros_like(label_map).astype(np.float64)
+	alpha_map = np.zeros_like(label_map).astype(float)
 	
 
 	for drop in listFinalDrops:
@@ -219,7 +306,7 @@ def generateDrops(imagePath, cfg, listFinalDrops):
 		tmp_alpha_map  = alpha_map[ROIU:ROID, ROIL:ROIR]
 
 		output = drop.getTexture()		
-		tmp_output = np.asarray(output).astype(np.float)[:,:,-1]
+		tmp_output = np.asarray(output).astype(float)[:,:,-1]
 		tmp_alpha_map = tmp_alpha_map * (tmp_output/255)
 		tmp_alpha_map  = Image.fromarray(tmp_alpha_map.astype('uint8'))		
 
