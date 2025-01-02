@@ -1,9 +1,11 @@
 from nuscenes.nuscenes import NuScenes
+from nuscenes.can_bus.can_bus_api import NuScenesCanBus
 import numpy as np
 import csv
 
 # nuScenesデータセットのパス
 nusc = NuScenes(version='v1.0-mini', dataroot='/home/yoshi-22/UniAD/data/nuscenes', verbose=True)
+nusc_can = NuScenesCanBus(dataroot='/home/yoshi-22/UniAD/data/nuscenes/can_bus')
 
 # 例として、CAM_FRONTのデータを取得
 sensor_channel = 'CAM_FRONT'
@@ -23,32 +25,42 @@ with open(output_file, mode='w', newline='') as file:
     for scene in nusc.scene:
         print(scene['name'])
         sample_token = scene['first_sample_token']
+        # ステアリング角度データを取得
+        can_data = nusc_can.get_messages(scene['name'], 'steeranglefeedback')
+
         # カメラ画像に対応するego_poseを取得
         while sample_token:
             sample = nusc.get('sample', sample_token)
             cam_data = nusc.get('sample_data', sample['data'][sensor_channel])
             ego_pose = nusc.get('ego_pose', cam_data['ego_pose_token'])
-            # ここにステアリング角度を取得する処理を追加
-            stter_angle = None
-            can_data_token = sample['data'].get('CAN_BUS', None)
-            if can_data_token:
-                can_data = nusc.get('sample_data', can_data_token)
-                can = nusc.get('can_bus', can_data['can_bus'])
-                steering_angle = can['steering_angle']
-            else:
-                steering_angle = None
-            
-            # ファイル名を保存
-            writer.writerow([scene['name'], cam_data['filename'], ego_pose['translation'][0], ego_pose['translation'][1], ego_pose['translation'][2], ego_pose['rotation'][0], ego_pose['rotation'][1], ego_pose['rotation'][2], ego_pose['rotation'][3]])
-                            
+
+            # ego_poseのタイムスタンプ
+            ego_timestamp = ego_pose['timestamp']
+
+            # ステアリング角度をタイムスタンプに基づいて検索
+            steering_angle = None
+            for entry in can_data:
+                if abs(entry['utime'] - ego_timestamp) < 1e4:  # 10ミリ秒以内のデータをマッチング
+                    steering_angle = entry['value']
+                    break
+
+            # CSVに書き込み
+            writer.writerow([
+                scene['name'],
+                cam_data['filename'],
+                ego_pose['translation'][0],
+                ego_pose['translation'][1],
+                ego_pose['translation'][2],
+                ego_pose['rotation'][0],
+                ego_pose['rotation'][1],
+                ego_pose['rotation'][2],
+                ego_pose['rotation'][3],
+                steering_angle
+            ])
+
             processed_images.append(cam_data['filename'])
 
-            # # 画像ファイル名と姿勢データを出力
-            # print(f"Image: {cam_data['filename']}")
-            # print(f"Position: {ego_pose['translation']}")  # [x, y, z]
-            # print(f"Rotation: {ego_pose['rotation']}")    # Quaternion [w, x, y, z]
-            
             # 次のデータへ移動
             sample_token = sample['next']
 
-print(f"Processed {len(processed_images)} images.")
+print(f"Processed {len(processed_images)} images and saved to {output_file}.")
