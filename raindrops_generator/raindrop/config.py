@@ -10,10 +10,10 @@ A, B, C, D -- 4 tuples defining coordinates of Bezier control points in Alpha Ma
 """
 
 cfg = {
-	'maxR': 150, # max not more then 150
+	'maxR': 120, # max not more then 150
 	'minR': 90,
-	'maxDrops': 30,
-	'minDrops': 10,
+	'maxDrops': 70,
+	'minDrops': 50,
 	'edge_darkratio': 0.6,
 	'return_label': True,
 	'label_thres': 128,
@@ -21,5 +21,5 @@ cfg = {
 	'B': (3, 1),
 	'C': (1, 3),
 	'D': (3, 3),
-    'region': 'bottom-left',
+    'region': 'forth-bottom-right',
 }

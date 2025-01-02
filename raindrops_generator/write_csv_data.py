@@ -51,15 +51,15 @@ def process_images(input_folder_path, output_folder_path, list_of_drops):
 
 if __name__ == "__main__":
     # Paths and configurations
-    csv_folder_path = "csv_data/"
+    csv_folder_path = "csv_data_forth/"
     csv_paths = [
-        os.path.join(csv_folder_path, f"drops{i}.csv") for i in range(1, 10)
+        os.path.join(csv_folder_path, f"forth_{i}.csv") for i in range(1, 5)
     ]
     image_folders = {
-        f"/home/yoshi-22/UniAD/data/nuscenes/samples{i}": f"/home/yoshi-22/UniAD/ROLE/nuscenes/samples" for i in range(1, 10)
+        f"/home/yoshi-22/UniAD/data/nuscenes/samples{i}": f"/home/yoshi-22/UniAD/ROLE/nuscenes/samples" for i in range(1, 5)
     }
     image_folders.update({
-        f"/home/yoshi-22/UniAD/data/nuscenes/sweeps{i}": f"/home/yoshi-22/UniAD/ROLE/nuscenes/sweeps" for i in range(1, 10)
+        f"/home/yoshi-22/UniAD/data/nuscenes/sweeps{i}": f"/home/yoshi-22/UniAD/ROLE/nuscenes/sweeps" for i in range(1, 5)
     })
 
     print("image_folders:", image_folders)
