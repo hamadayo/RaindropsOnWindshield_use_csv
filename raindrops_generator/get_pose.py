@@ -16,11 +16,11 @@ print(f"Scene token: {scene_token}")
 sample_token = nusc.get('scene', scene_token)['first_sample_token']
 # 実際に処理した画像の数をカウント
 processed_images = []
-output_file = 'ego_pose.csv'
+output_file = 'ego_steer.csv'
 
 with open(output_file, mode='w', newline='') as file:
     writer = csv.writer(file)
-    writer.writerow(['Scene Name', 'Image Filename', 'Position X', 'Position Y', 'Position Z', 'Rotation W', 'Rotation X', 'Rotation Y', 'Rotation Z', 'Steering Angle'])
+    writer.writerow(['token', 'Scene Name', 'Image Filename', 'Steering Angle'])
 
     for scene in nusc.scene:
         print(scene['name'])
@@ -32,6 +32,9 @@ with open(output_file, mode='w', newline='') as file:
         first_sample = True
         while sample_token:
             sample = nusc.get('sample', sample_token)
+            print(f'sample {type(sample)}')
+            print(f'sample{sample.keys()}')
+            print(f'token {sample["token"]}')
             cam_data = nusc.get('sample_data', sample['data'][sensor_channel])
             ego_pose = nusc.get('ego_pose', cam_data['ego_pose_token'])
 
@@ -50,15 +53,9 @@ with open(output_file, mode='w', newline='') as file:
 
             # CSVに書き込み
             writer.writerow([
+                sample['token'],
                 scene['name'],
                 cam_data['filename'],
-                ego_pose['translation'][0],
-                ego_pose['translation'][1],
-                ego_pose['translation'][2],
-                ego_pose['rotation'][0],
-                ego_pose['rotation'][1],
-                ego_pose['rotation'][2],
-                ego_pose['rotation'][3],
                 steering_angle
             ])
 
